@@ -9,7 +9,7 @@ def number(num, digits=4) -> float:
 
 def log_tensorboard(tensorboard, train_metric, val_metric, num_epoch, train_metric_each_class=None, log=None,
                     val_metric_each_class=None, class_json=None, epoch_loss=None, val_epoch_loss=None,
-                    log_echa_metrics: bool = False) -> Dict:
+                    log_echa_metrics: bool = False, save_logs_class_nun_epoch: int = 10) -> Dict:
     """
     :param tensorboard: tensorboard object for entering information.
     :param train_metric: averaged trainig metric by epoch.
@@ -21,6 +21,8 @@ def log_tensorboard(tensorboard, train_metric, val_metric, num_epoch, train_metr
     :param val_metric_each_class: avaraged validation metrics for each class.
     :param class_json: dict with indexes for each class.
     :param log: object for logging data.
+    :param log_echa_metrics:
+    :param save_logs_class_nun_epoch:
     :return dictionary with structured information about losses and metrics.
     """
 
@@ -51,7 +53,7 @@ def log_tensorboard(tensorboard, train_metric, val_metric, num_epoch, train_metr
                     name_class = list(class_json.keys())[list(class_json.values()).index(i)]
                     dict_for_each_class[name_class]=value_tensor[i].item()
 
-                if log_echa_metrics:
+                if log_echa_metrics and num_epoch % save_logs_class_nun_epoch == 0:
                     log.update_metric([name_metric + '_Classes', dict_for_each_class])
                 tensorboard.add_scalars(name_metric + '_Classes', dict_for_each_class, num_epoch)
 
