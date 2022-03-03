@@ -67,7 +67,6 @@ class CustomDataset(Dataset):
 
         img_tensor = torch.from_numpy(img)
         img_tensor = img_tensor.permute(2, 0, 1)
-        img_tensor = img_tensor / 255.0
 
         return img_tensor, lable
 
