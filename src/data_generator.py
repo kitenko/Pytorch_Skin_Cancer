@@ -1,7 +1,7 @@
 import os
 from glob import glob
 import json
-from typing import Tuple
+from typing import Tuple, List
 
 import cv2
 import torch
@@ -9,13 +9,13 @@ import numpy as np
 import albumentations as A
 from torch.utils.data import Dataset
 
-from config import INPUT_SHAPE_IMAGE, JSON_NAME, AUGMENTATION_DATA, PATH_DATA
+from config import INPUT_SHAPE_IMAGE, JSON_NAME, AUGMENTATION_DATA, PATH_DATA, MEAN_STANDART_DEVIATION
 
 
 class CustomDataset(Dataset):
     def __init__(self, data_path: str = PATH_DATA, json_name: str = JSON_NAME, shuffle_data: bool = False,
-                 augmentation_data: bool = AUGMENTATION_DATA, is_train: bool = True,
-                 image_shape: Tuple[int, int, int] = INPUT_SHAPE_IMAGE):
+                 augmentation_data: bool = AUGMENTATION_DATA, image_shape: Tuple[int, int, int] = INPUT_SHAPE_IMAGE,
+                 mean_std: Tuple[List, List]= MEAN_STANDART_DEVIATION, is_train: str = 'val'):
         """
         Data generator for prepare input data.
         :param data_path: a path to the folder where the data is stored.
@@ -27,17 +27,21 @@ class CustomDataset(Dataset):
         """
 
         self.image_shape = image_shape
+        self.mean_std = mean_std
 
         # read json
         with open(os.path.join(data_path, json_name), 'r') as f:
             self.index = json.load(f)
 
         # augmentation data
-        if is_train:
+        if is_train == 'train':
             self.data = [y for x in os.walk(os.path.join(data_path, 'train')) for y in glob(os.path.join(x[0], '*.jpg'))]
             augmentation = self.augmentation_images(augmentation_data)
-        else:
+        elif is_train == 'val':
             self.data = [y for x in os.walk(os.path.join(data_path, 'val')) for y in glob(os.path.join(x[0], '*.jpg'))]
+            augmentation = self.augmentation_images()
+        else:
+            self.data = [y for x in os.walk(os.path.join(data_path, 'test')) for y in glob(os.path.join(x[0], '*.jpg'))]
             augmentation = self.augmentation_images()
 
         self.aug = augmentation
@@ -87,6 +91,7 @@ class CustomDataset(Dataset):
         """
         if augm is True:
             aug = A.Compose([
+                A.Normalize(mean=(self.mean_std[0]), std=(self.mean_std[1])),
                 A.Resize(height=self.image_shape[2], width=self.image_shape[1]),
                 A.Blur(blur_limit=4.0, p=0.3),
                 A.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.2, hue=0.2, always_apply=False, p=0.3),
@@ -96,7 +101,8 @@ class CustomDataset(Dataset):
                 A.RandomRotate90(p=1.0)
             ])
         else:
-            aug = A.Compose([A.Resize(height=self.image_shape[2], width=self.image_shape[1])])
+            aug = A.Compose([A.Normalize(mean=(self.mean_std[0]), std=(self.mean_std[1])),
+                             A.Resize(height=self.image_shape[2], width=self.image_shape[1])])
 
         return aug
 

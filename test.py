@@ -8,8 +8,6 @@ import torch
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from torch.utils.data import DataLoader
-
-from torchmetrics import AveragePrecision, BinnedAveragePrecision
 from memory_profiler import profile
 
 
@@ -25,10 +23,10 @@ def count_metrics(weights: str, json_file: str = JSON_NAME, json_class: str = CL
     with open(os.path.join(data_path, json_class), 'r') as file:
         data_name = json.load(file)
 
-    test_data = CustomDataset(data_path=data_path, json_name=json_file, is_train=False,
+    test_data = CustomDataset(data_path=data_path, json_name=json_file, is_train='test',
                               image_shape=INPUT_SHAPE_IMAGE, augmentation_data=False)
 
-    test_loader = DataLoader(test_data, batch_size=1, shuffle=False, num_workers=1,
+    test_loader = DataLoader(test_data, batch_size=1, shuffle=False, num_workers=4,
                              persistent_workers=True)
 
     device = torch.device('cuda:{}'.format(GPU_NUM) if torch.cuda.is_available() else 'cpu')
@@ -40,43 +38,21 @@ def count_metrics(weights: str, json_file: str = JSON_NAME, json_class: str = CL
     metric = MetricsTorch(average='macro', device=device, accuracy=True, precision=True, recall=True, f1=True,
                           each_class=True)
 
-    # averpres = AveragePrecision(num_classes=NUMBER_CLASSES, compute_on_step=True)
-    adr = BinnedAveragePrecision(num_classes=NUMBER_CLASSES, thresholds=10)
-    # pr, l = [], []
-
-    nu = 0
     for inputs, labels in tqdm(test_loader):
-        # if nu >= 10:
-        #     continue
         inputs = inputs.to(device)
         labels = labels.to(device)
         _, soft_out = model(inputs)
         _, preds = torch.max(soft_out, 1)
-        # pr.append(soft_out)
-        # l.append(labels)
         metric.validation_step(labels, preds)
         metric.validation_step_each_class(labels, preds)
-        # averpres.update(soft_out, labels)
-        adr.update(soft_out, preds)
-
-        # print('--------------', sys.getsizeof(averpres))
-        # print(sys.getsizeof(pr))
-        # print(sys.getsizeof(l))
-        # print()
-        nu += 1
-    # pr = torch.Tensor(pr)
-    # l = torch.Tensor(l)
 
     val_epoch_metrics = metric.validation_step_compute()
     val_epoch_metrics_each_class = metric.validation_step_each_class_compute()
-    # aver = averpres.compute()
-    aver = adr.compute()
 
     general_metric, metric_each_class = prepare_results_metrics_print(val_epoch_metrics,
                                                                       val_epoch_metrics_each_class, data_name)
     print(general_metric)
     print(metric_each_class)
-    print(aver)
 
 
 def show_batch(data_path: str = PATH_DATA, json_name: str = JSON_NAME, class_json: str = CLASS_JSON,
@@ -94,7 +70,7 @@ def show_batch(data_path: str = PATH_DATA, json_name: str = JSON_NAME, class_jso
     with open(os.path.join(data_path, class_json), 'r') as file:
         class_name = json.load(file)
 
-    data_show = CustomDataset(data_path=data_path, json_name=json_name, is_train=True, shuffle_data=True)
+    data_show = CustomDataset(data_path=data_path, json_name=json_name, is_train='train', shuffle_data=True)
 
     for i in range(len(data_show)):
         image, label = data_show[i]
@@ -164,7 +140,7 @@ def show_image_prediction(path_file_dir: str, weights: str, json_class: str, app
                               in_chans=INPUT_SHAPE_IMAGE[0], device=device)
     model.eval()
 
-    prepare_data = CustomDataset(is_train=False)
+    prepare_data = CustomDataset(is_train='val')
 
     if os.path.isdir(path_file_dir):
         for file in os.listdir(path_file_dir):
@@ -215,10 +191,11 @@ def predict(path_file: str, model, prepare_data, id_class: Dict,
 
 
 if __name__ == '__main__':
-    show_batch()
+    # show_batch()
 
     # show_image_prediction('data/images/polyps', '/Users/kitenko/Downloads/model_best.pth', 'data/class_index.json',
     #                       apply_score_cam=True)
     # predict_test('data/images/cecum', '/Users/kitenko/Downloads/model_best.pth', 'data/class_index.json')
 
-    # count_metrics(weights='save_models/model_best-2.pth')
+    count_metrics(weights='save_models/efficientnetv2_s_efficientnetv2_s_2022-03-01_18-33-03_shape-224-224/model_best.pth')
+

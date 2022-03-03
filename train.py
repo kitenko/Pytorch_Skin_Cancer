@@ -59,9 +59,9 @@ def train(data_path: str = PATH_DATA, input_shape_image: Tuple[int, int, int] = 
     """---------------------------------------------------------------------------------------------------"""
     """-------------------------------------prepare data--------------------------------------------------"""
 
-    train_data = CustomDataset(data_path=data_path, json_name=JSON_NAME, is_train=True,
+    train_data = CustomDataset(data_path=data_path, json_name=JSON_NAME, is_train='train',
                                image_shape=input_shape_image)
-    val_data = CustomDataset(data_path=data_path, json_name=JSON_NAME, is_train=False,
+    val_data = CustomDataset(data_path=data_path, json_name=JSON_NAME, is_train='val',
                              image_shape=input_shape_image)
 
     train_loader = DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True, num_workers=NUM_WORKERS, drop_last=True,
@@ -176,7 +176,7 @@ def train(data_path: str = PATH_DATA, input_shape_image: Tuple[int, int, int] = 
                                 epoch_loss=epoch_loss, val_epoch_loss=val_epoch_loss,
                                 train_metric_each_class=epoch_metrics_each_class,
                                 val_metric_each_class=val_epoch_metrics_each_class, class_json=cl_json,
-                                num_epoch=epoch, log=log)
+                                num_epoch=epoch, log=log, log_echa_metrics=True)
 
                 print(metric_print)
 
