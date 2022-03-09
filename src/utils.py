@@ -22,7 +22,7 @@ def save_checkpoint(state: Dict, is_best: bool, path_state: str, best_state_path
         copy2(os.path.join(path_state, 'checkpoint.pth'), os.path.join(best_state_path, 'model_best.pth'))
 
 
-def load_check_point(checkpoint_path: str, model, optimizer, device: str):
+def load_check_point(checkpoint_path: str, model, optimizer, device: torch.device):
     """
     checkpoint_path: path to save checkpoint file
     model: model that we want to load checkpoint parameters into

@@ -59,9 +59,9 @@ def train(data_path: str = PATH_DATA, input_shape_image: Tuple[int, int, int] = 
     """---------------------------------------------------------------------------------------------------"""
     """-------------------------------------prepare data--------------------------------------------------"""
 
-    train_data = CustomDataset(data_path=data_path, json_name=JSON_NAME, is_train='train',
+    train_data = CustomDataset(data_path=data_path, json_name=JSON_NAME, is_train='test',
                                image_shape=input_shape_image)
-    val_data = CustomDataset(data_path=data_path, json_name=JSON_NAME, is_train='val',
+    val_data = CustomDataset(data_path=data_path, json_name=JSON_NAME, is_train='test',
                              image_shape=input_shape_image)
 
     train_loader = DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True, num_workers=NUM_WORKERS, drop_last=True,
@@ -73,9 +73,6 @@ def train(data_path: str = PATH_DATA, input_shape_image: Tuple[int, int, int] = 
     testing_samples_num = len(test_loader.dataset)
 
     """---------------------------------------------------------------------------------------------------"""
-    # create log instance
-    log = LoggingModel(save_path_log=save_current_logs, list_augmentations=str(train_data.aug.transforms.transforms))
-
     device = torch.device('cuda:{}'.format(gpu_num) if torch.cuda.is_available() else 'cpu')
 
     # Load model
@@ -101,6 +98,8 @@ def train(data_path: str = PATH_DATA, input_shape_image: Tuple[int, int, int] = 
 
     metric = MetricsTorch(average='macro', device=device, accuracy=True, precision=True, recall=True, f1=True,
                           each_class=True)
+    # create log instance
+    log = LoggingModel(save_path_log=save_current_logs, list_augmentations=str(train_data.aug.transforms.transforms))
 
     try:
         for epoch in range(1, EPOCHS + 1):
@@ -176,7 +175,7 @@ def train(data_path: str = PATH_DATA, input_shape_image: Tuple[int, int, int] = 
                                 epoch_loss=epoch_loss, val_epoch_loss=val_epoch_loss,
                                 train_metric_each_class=epoch_metrics_each_class,
                                 val_metric_each_class=val_epoch_metrics_each_class, class_json=cl_json,
-                                num_epoch=epoch, log=log, log_echa_metrics=True)
+                                num_epoch=epoch, log=log, log_echa_metrics=True, save_logs_class_nun_epoch=1)
 
                 print(metric_print)
 

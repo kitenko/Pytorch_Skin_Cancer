@@ -28,6 +28,8 @@ def log_tensorboard(tensorboard, train_metric, val_metric, num_epoch, train_metr
 
     if epoch_loss is not None or val_epoch_loss is not None:
         tensorboard.add_scalars('Loss', {"train": epoch_loss, "val": val_epoch_loss}, num_epoch)
+        log.update_metric(['train_loss', number(epoch_loss)], num_epoch)
+        log.update_metric(['val_loss', number(val_epoch_loss)], num_epoch)
 
     dict_with_data = {}
     print_metric = {'Loss': {"train": number(epoch_loss), "val": number(val_epoch_loss)}}
@@ -41,7 +43,7 @@ def log_tensorboard(tensorboard, train_metric, val_metric, num_epoch, train_metr
             if val_or_train == 'val':
                 dict_with_data[val_or_train] = value_tensor.item()
 
-            log.update_metric([val_or_train + '_' + name_draw, value_tensor.item()])
+            log.update_metric([val_or_train + '_' + name_draw, value_tensor.item()], num_epoch)
             print_metric[val_or_train + '_' + name_draw] = number(value_tensor.item())
             tensorboard.add_scalars(name_draw, dict_with_data, num_epoch)
 
@@ -54,7 +56,9 @@ def log_tensorboard(tensorboard, train_metric, val_metric, num_epoch, train_metr
                     dict_for_each_class[name_class]=value_tensor[i].item()
 
                 if log_echa_metrics and num_epoch % save_logs_class_nun_epoch == 0:
-                    log.update_metric([name_metric + '_Classes', dict_for_each_class])
+                    log.update_metric([name_metric + '_Classes', dict_for_each_class], num_epoch)
                 tensorboard.add_scalars(name_metric + '_Classes', dict_for_each_class, num_epoch)
+
+    log.save_json()
 
     return print_metric

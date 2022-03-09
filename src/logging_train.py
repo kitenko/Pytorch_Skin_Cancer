@@ -42,7 +42,7 @@ class LoggingModel:
             'Layer_activation': layer_activation,
         }
 
-    def update_metric(self, metric: List) -> None:
+    def update_metric(self, metric: List, epoch: int) -> None:
         """
         :param metric: This is List object that contains a name and a value for the metric.
         """
@@ -53,13 +53,12 @@ class LoggingModel:
                     self.logs[metric[0]][name_class] = []
 
             for name_class, value in metric[1].items():
-                self.logs[metric[0]][name_class].append(metric[1])
+                self.logs[metric[0]][name_class].append('epoch ' + str(epoch) + ': ' + str(metric[1]))
 
         else:
             if metric[0] not in self.logs:
                 self.logs[metric[0]] = []
-            self.logs[metric[0]].append(metric[1])
-        self.save_json()
+            self.logs[metric[0]].append('epoch ' + str(epoch) + ': ' + str(metric[1]))
 
     def save_json(self) -> None:
         """
